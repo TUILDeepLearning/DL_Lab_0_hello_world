@@ -1,8 +1,7 @@
 name: Autograding Tests
-on:
-  - push
-  - workflow_dispatch
-  - repository_dispatch
+'on':
+- push
+- repository_dispatch
 permissions:
   checks: write
   actions: read
@@ -14,16 +13,32 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: Set up python
-      uses: actions/setup-python@v5
+    # - name: test1
+    #   id: test1
+    #   uses: classroom-resources/autograding-python-grader@v1
+    #   with:
+    #     timeout: 10
+    #     max-score: 1
+    #     setup-command: pip install numpy pytest nbformat nbconvert
+    - name: test_run_cmd_2
+      id: test_run_cmd_2
+      uses: classroom-resources/autograding-command-grader@v1
       with:
-          python-version: '3.10'
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-    - name: Run test
-      run: pytest -q
+        test-name: run_bundled_tests
+        setup-command: pip install numpy pytest pytest-json-report nbformat nbconvert
+        # command: pytest tests/test_hello.py tests/test_2.py -q
+        command: pytest tests -q --json-report --json-report-file=pytest_report.json
+        timeout: 10
+        max-score: 20
+    - name: Parse pytest results
+      id: parse_results
+      run: ./scripts/parse_and_emit.sh
+      shell: bash
+      env:
+        GITHUB_OUTPUT: ${{ github.output }}
     - name: Autograding Reporter
       uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        RUN_BUNDLED_TESTS_RESULTS: "${{steps.run_bundled_tests.outputs.result}}"
       with:
-         token: ${{ secrets.GITHUB_TOKEN }}
-         runners: ubuntu-latest
+        runners: run_bundled_tests
