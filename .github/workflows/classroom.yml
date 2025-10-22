@@ -32,7 +32,7 @@ jobs:
         max-score: 20
     - name: Parse pytest results
       id: parse_results
-      run: ./scripts/parse_and_emit.sh
+      run: ./tests/parse_and_emit.sh
       shell: bash
       env:
         GITHUB_OUTPUT: ${{ github.output }}
